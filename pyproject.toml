@@ -8,7 +8,7 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "open-asset-model>=1.1.1",
+    "open-asset-model>=1.1.2",
 ]
 
 [build-system]

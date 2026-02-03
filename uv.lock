@@ -43,22 +43,22 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "open-asset-model", specifier = ">=1.1.1" }]
+requires-dist = [{ name = "open-asset-model", specifier = ">=1.1.2" }]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=9.0.2" }]
 
 [[package]]
 name = "open-asset-model"
-version = "1.1.1"
+version = "1.1.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fqdn" },
     { name = "phonenumbers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f1/6b/a1e610bf0408a5df9de94ef9d8d17b8fb388d39d54425f754b37c899f834/open_asset_model-1.1.1.tar.gz", hash = "sha256:c3106090b146554156984b6e486192028064378b167d043dd4fd3f6c6c19e13c", size = 25932, upload-time = "2026-01-13T10:00:40.094Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f7/e8/0914395f5737ceda3a797d964483769f7009927a001c44a766ecc926ca29/open_asset_model-1.1.2.tar.gz", hash = "sha256:6207ffa0fe8d36c9e1e29f25177199d13a137a0cbad583e8e8b211f2357e343b", size = 26291, upload-time = "2026-02-03T14:57:40.818Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5b/d9/b3a1e5dcb00eaa51a8e6c57213e27ef81711624b841ac411010ccb299361/open_asset_model-1.1.1-py3-none-any.whl", hash = "sha256:812f7880f5c690ba82aa3990cb4489503a5868fb1e6b0993ca7483acad2df363", size = 44260, upload-time = "2026-01-13T10:00:38.724Z" },
+    { url = "https://files.pythonhosted.org/packages/1b/c3/5eb827755605be355a7d1f58f8afa62d534cb63d98b3ca15c4bceb036b46/open_asset_model-1.1.2-py3-none-any.whl", hash = "sha256:200a0997b55c2a4f03501f230f9056aacfed0f205c8b24676c155575d90e86ed", size = 45641, upload-time = "2026-02-03T14:57:39.373Z" },
 ]
 
 [[package]]
