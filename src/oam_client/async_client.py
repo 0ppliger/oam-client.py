@@ -70,7 +70,7 @@ class AsyncBrokerClient(BrokerClientBase):
             except Exception as e:
                 raise e
 
-    async def listenEvents(self):
+    async def listen_events(self):
         def print_event(sse: ServerSentEvent):
             print(
                 sse.event,
@@ -79,14 +79,14 @@ class AsyncBrokerClient(BrokerClientBase):
                 sse.retry)
         await self.__listen("GET", "/listen", print_event)
 
-    async def createEntity(
+    async def create_entity(
             self,
             asset: Asset
     ) -> ServerResponse:
         entity = EntityRequest(asset.asset_type, asset)
         return await self.__send("post", "/emit/entity", entity.to_json())
 
-    async def updateEntity(
+    async def update_entity(
             self,
             id: str,
             asset: Asset
@@ -94,13 +94,13 @@ class AsyncBrokerClient(BrokerClientBase):
         entity = EntityRequest(asset.asset_type, asset)
         return await self.__send("put", f"/emit/entity/{id}", entity.to_json())
 
-    async def deleteEntity(
+    async def delete_entity(
             self,
             id: str
     ) -> ServerResponse:
         return await self.__send("delete", f"/emit/entity/{id}", "")
 
-    async def createEdge(
+    async def create_edge(
             self,
             relation: Relation,
             from_entity: str,
@@ -111,7 +111,7 @@ class AsyncBrokerClient(BrokerClientBase):
             from_entity, to_entity)
         return await self.__send("post", "/emit/edge", edge.to_json())
 
-    async def updateEdge(
+    async def update_edge(
             self,
             id: str,
             relation: Relation,
@@ -123,13 +123,13 @@ class AsyncBrokerClient(BrokerClientBase):
             from_entity, to_entity)
         return await self.__send("put", f"/emit/edge/{id}", edge.to_json())
 
-    async def deleteEdge(
+    async def delete_edge(
             self,
             id: str
     ) -> ServerResponse:
         return await self.__send("delete", f"/emit/edge/{id}", "")
 
-    async def createEntityTag(
+    async def create_entity_tag(
             self,
             property: Property,
             entity: str,
@@ -139,7 +139,7 @@ class AsyncBrokerClient(BrokerClientBase):
         return await self.__send(
             "post", "/emit/entity_tag", entity_tag.to_json())
 
-    async def updateEntityTag(
+    async def update_entity_tag(
             self,
             id: str,
             property: Property,
@@ -150,13 +150,13 @@ class AsyncBrokerClient(BrokerClientBase):
         return await self.__send(
             "put", f"/emit/entity_tag/{id}", entity_tag.to_json())
 
-    async def deleteEntityTag(
+    async def delete_entity_tag(
             self,
             id: str
     ) -> ServerResponse:
         return await self.__send("delete", f"/emit/entity_tag/{id}", "")
 
-    async def createEdgeTag(
+    async def create_edge_tag(
             self,
             property: Property,
             edge: str
@@ -165,7 +165,7 @@ class AsyncBrokerClient(BrokerClientBase):
             property.property_type, property, edge)
         return await self.__send("post", "/emit/edge_tag", edge_tag.to_json())
 
-    async def updateEdgeTag(
+    async def update_edge_tag(
             self,
             id: str,
             property: Property,
@@ -176,7 +176,7 @@ class AsyncBrokerClient(BrokerClientBase):
         return await self.__send(
             "put", f"/emit/edge_tag/{id}", edge_tag.to_json())
 
-    async def deleteEdgeTag(
+    async def delete_edge_tag(
             self,
             id: str
     ) -> ServerResponse:

@@ -67,7 +67,7 @@ class BrokerClient(BrokerClientBase):
             except Exception as e:
                 raise e
 
-    def listenEvents(self):
+    def listen_events(self):
         def print_event(sse: ServerSentEvent):
             print(
                 sse.event,
@@ -76,14 +76,14 @@ class BrokerClient(BrokerClientBase):
                 sse.retry)
         self.__listen("GET", "/listen", print_event)
 
-    def createEntity(
+    def create_entity(
             self,
             asset: Asset
     ) -> ServerResponse:
         entity = EntityRequest(asset.asset_type, asset)
         return self.__send("post", "/emit/entity", entity.to_json())
 
-    def updateEntity(
+    def update_entity(
             self,
             id: str,
             asset: Asset
@@ -91,13 +91,13 @@ class BrokerClient(BrokerClientBase):
         entity = EntityRequest(asset.asset_type, asset)
         return self.__send("put", f"/emit/entity/{id}", entity.to_json())
 
-    def deleteEntity(
+    def delete_entity(
             self,
             id: str
     ) -> ServerResponse:
         return self.__send("delete", f"/emit/entity/{id}", "")
 
-    def createEdge(
+    def create_edge(
             self,
             relation: Relation,
             from_entity: str,
@@ -108,7 +108,7 @@ class BrokerClient(BrokerClientBase):
             from_entity, to_entity)
         return self.__send("post", "/emit/edge", edge.to_json())
 
-    def updateEdge(
+    def update_edge(
             self,
             id: str,
             relation: Relation,
@@ -120,13 +120,13 @@ class BrokerClient(BrokerClientBase):
             from_entity, to_entity)
         return self.__send("put", f"/emit/edge/{id}", edge.to_json())
 
-    def deleteEdge(
+    def delete_edge(
             self,
             id: str
     ) -> ServerResponse:
         return self.__send("delete", f"/emit/edge/{id}", "")
 
-    def createEntityTag(
+    def create_entity_tag(
             self,
             property: Property,
             entity: str,
@@ -136,7 +136,7 @@ class BrokerClient(BrokerClientBase):
         return self.__send(
             "post", "/emit/entity_tag", entity_tag.to_json())
 
-    def updateEntityTag(
+    def update_entity_tag(
             self,
             id: str,
             property: Property,
@@ -147,13 +147,13 @@ class BrokerClient(BrokerClientBase):
         return self.__send(
             "put", f"/emit/entity_tag/{id}", entity_tag.to_json())
 
-    def deleteEntityTag(
+    def delete_entity_tag(
             self,
             id: str
     ) -> ServerResponse:
         return self.__send("delete", f"/emit/entity_tag/{id}", "")
 
-    def createEdgeTag(
+    def create_edge_tag(
             self,
             property: Property,
             edge: str
@@ -162,7 +162,7 @@ class BrokerClient(BrokerClientBase):
             property.property_type, property, edge)
         return self.__send("post", "/emit/edge_tag", edge_tag.to_json())
 
-    def updateEdgeTag(
+    def update_edge_tag(
             self,
             id: str,
             property: Property,
@@ -173,7 +173,7 @@ class BrokerClient(BrokerClientBase):
         return self.__send(
             "put", f"/emit/edge_tag/{id}", edge_tag.to_json())
 
-    def deleteEdgeTag(
+    def delete_edge_tag(
             self,
             id: str
     ) -> ServerResponse:
