@@ -1,5 +1,6 @@
 import httpx
-from httpx_sse import connect_sse, ServerSentEvent
+import asyncio
+from httpx_sse import aconnect_sse, ServerSentEvent
 from asset_model import Asset, Relation, Property
 from .messages import (
     ServerResponse,
@@ -12,18 +13,18 @@ from typing import Callable
 from .base import BrokerClientBase
 
 
-class BrokerClient(BrokerClientBase):
-    def __send(
+class AsyncBrokerClient(BrokerClientBase):
+    async def __send(
             self,
             method: str,
             path: str,
             payload: str
     ) -> ServerResponse:
-        with httpx.Client(
+        async with httpx.AsyncClient(
                 http2=True,
                 verify=self.ssl_context
         ) as client:
-            response = client.request(
+            response = await client.request(
                 method=method.upper(),
                 url=self.url + path,
                 headers={
@@ -39,7 +40,7 @@ class BrokerClient(BrokerClientBase):
                 payload["action"]
             )
 
-    def __listen(
+    async def __listen(
             self,
             method: str,
             path: str,
@@ -47,57 +48,59 @@ class BrokerClient(BrokerClientBase):
     ):
         while True:
             try:
-                with httpx.Client(
+                async with httpx.AsyncClient(
                         http2=True,
                         verify=self.ssl_context,
                         timeout=httpx.Timeout(None, connect=10.0)
                 ) as client:
-                    with connect_sse(
+                    async with aconnect_sse(
                             client=client,
                             method=method.upper(),
                             url=self.url + path
                     ) as event_source:
-                        for sse in event_source.iter_sse():
+                        async for sse in event_source.aiter_sse():
                             callback(sse)
 
             except (httpx.ReadTimeout,
                     httpx.ConnectError,
                     httpx.HTTPStatusError):
                 continue
+            except asyncio.CancelledError:
+                break
             except Exception as e:
                 raise e
 
-    def listenEvents(self):
+    async def listenEvents(self):
         def print_event(sse: ServerSentEvent):
             print(
                 sse.event,
                 sse.data,
                 sse.id,
                 sse.retry)
-        self.__listen("GET", "/listen", print_event)
+        await self.__listen("GET", "/listen", print_event)
 
-    def createEntity(
+    async def createEntity(
             self,
             asset: Asset
     ) -> ServerResponse:
         entity = EntityRequest(asset.asset_type, asset)
-        return self.__send("post", "/emit/entity", entity.to_json())
+        return await self.__send("post", "/emit/entity", entity.to_json())
 
-    def updateEntity(
+    async def updateEntity(
             self,
             id: str,
             asset: Asset
     ) -> ServerResponse:
         entity = EntityRequest(asset.asset_type, asset)
-        return self.__send("put", f"/emit/entity/{id}", entity.to_json())
+        return await self.__send("put", f"/emit/entity/{id}", entity.to_json())
 
-    def deleteEntity(
+    async def deleteEntity(
             self,
             id: str
     ) -> ServerResponse:
-        return self.__send("delete", f"/emit/entity/{id}", "")
+        return await self.__send("delete", f"/emit/entity/{id}", "")
 
-    def createEdge(
+    async def createEdge(
             self,
             relation: Relation,
             from_entity: str,
@@ -106,9 +109,9 @@ class BrokerClient(BrokerClientBase):
         edge = EdgeRequest(
             relation.relation_type, relation,
             from_entity, to_entity)
-        return self.__send("post", "/emit/edge", edge.to_json())
+        return await self.__send("post", "/emit/edge", edge.to_json())
 
-    def updateEdge(
+    async def updateEdge(
             self,
             id: str,
             relation: Relation,
@@ -118,25 +121,25 @@ class BrokerClient(BrokerClientBase):
         edge = EdgeRequest(
             relation.relation_type, relation,
             from_entity, to_entity)
-        return self.__send("put", f"/emit/edge/{id}", edge.to_json())
+        return await self.__send("put", f"/emit/edge/{id}", edge.to_json())
 
-    def deleteEdge(
+    async def deleteEdge(
             self,
             id: str
     ) -> ServerResponse:
-        return self.__send("delete", f"/emit/edge/{id}", "")
+        return await self.__send("delete", f"/emit/edge/{id}", "")
 
-    def createEntityTag(
+    async def createEntityTag(
             self,
             property: Property,
             entity: str,
     ) -> ServerResponse:
         entity_tag = EntityTagRequest(
             property.property_type, property, entity)
-        return self.__send(
+        return await self.__send(
             "post", "/emit/entity_tag", entity_tag.to_json())
 
-    def updateEntityTag(
+    async def updateEntityTag(
             self,
             id: str,
             property: Property,
@@ -144,25 +147,25 @@ class BrokerClient(BrokerClientBase):
     ) -> ServerResponse:
         entity_tag = EntityTagRequest(
             property.property_type, property, entity)
-        return self.__send(
+        return await self.__send(
             "put", f"/emit/entity_tag/{id}", entity_tag.to_json())
 
-    def deleteEntityTag(
+    async def deleteEntityTag(
             self,
             id: str
     ) -> ServerResponse:
-        return self.__send("delete", f"/emit/entity_tag/{id}", "")
+        return await self.__send("delete", f"/emit/entity_tag/{id}", "")
 
-    def createEdgeTag(
+    async def createEdgeTag(
             self,
             property: Property,
             edge: str
     ) -> ServerResponse:
         edge_tag = EdgeTagRequest(
             property.property_type, property, edge)
-        return self.__send("post", "/emit/edge_tag", edge_tag.to_json())
+        return await self.__send("post", "/emit/edge_tag", edge_tag.to_json())
 
-    def updateEdgeTag(
+    async def updateEdgeTag(
             self,
             id: str,
             property: Property,
@@ -170,11 +173,11 @@ class BrokerClient(BrokerClientBase):
     ) -> ServerResponse:
         edge_tag = EdgeTagRequest(
             property.property_type, property, edge)
-        return self.__send(
+        return await self.__send(
             "put", f"/emit/edge_tag/{id}", edge_tag.to_json())
 
-    def deleteEdgeTag(
+    async def deleteEdgeTag(
             self,
             id: str
     ) -> ServerResponse:
-        return self.__send("delete", f"/emit/entity_tag/{id}", "")
+        return await self.__send("delete", f"/emit/entity_tag/{id}", "")
