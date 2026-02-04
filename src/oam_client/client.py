@@ -2,6 +2,8 @@ import os
 import json
 import httpx
 import ssl
+import asyncio
+from httpx_sse import aconnect_sse, ServerSentEvent
 from asset_model import Asset, Relation, Property
 from urllib import request
 from .messages import (
@@ -9,9 +11,9 @@ from .messages import (
     EntityRequest,
     EdgeRequest,
     EdgeTagRequest,
-    EntityTagRequest
+    EntityTagRequest,
 )
-from typing import Optional
+from typing import Optional, Callable
 
 class EmitterClient:
     url: str
@@ -43,6 +45,37 @@ class EmitterClient:
                 payload["subject"],
                 payload["action"]
             )
+
+    async def __listen(self, method: str, path: str, callback: Callable[[ServerSentEvent], None]):
+        while True:
+            try:
+                async with httpx.AsyncClient(
+                        http2=True,
+                        verify=self.ssl_context,
+                        timeout=httpx.Timeout(None, connect=10.0) 
+                ) as client:
+                    async with aconnect_sse(
+                            client=client,
+                            method=method.upper(),
+                            url=self.url + path
+                    ) as event_source:
+                        async for sse in event_source.aiter_sse():
+                            callback(sse)
+            except (httpx.ReadTimeout, httpx.ConnectError, httpx.HTTPStatusError) as e:
+                continue
+            except asyncio.CancelledError as e:
+                break
+            except Exception as e:
+                raise e
+        
+    async def listenEvents(self):
+        def print_event(sse: ServerSentEvent):
+            print(
+                sse.event,
+                sse.data,
+                sse.id,
+                sse.retry)
+        await self.__listen("GET", "/listen", print_event)
     
     async def createEntity(
             self,

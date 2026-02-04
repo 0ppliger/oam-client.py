@@ -10,14 +10,17 @@ from asset_model import (
     PropertyType
 )
 
+
 class ServerAction(str, Enum):
     Deleted = "deleted"
     Upserted = "upserted"
+
 
 @dataclass
 class ServerResponse:
     subject: str
     action: ServerAction
+
 
 @dataclass
 class EntityRequest:
@@ -29,7 +32,8 @@ class EntityRequest:
             "type": self.type.value,
             "asset": self.asset.to_dict(),
         })
-        
+
+
 @dataclass
 class EdgeRequest:
     type: RelationType
@@ -45,12 +49,13 @@ class EdgeRequest:
             "to": self.to_entity
         })
 
+
 @dataclass
 class EntityTagRequest:
     type: PropertyType
     property: Property
     entity: str
-        
+
     def to_json(self):
         return json.dumps({
             "type": self.type.value,
@@ -58,15 +63,23 @@ class EntityTagRequest:
             "entity": self.entity,
         })
 
+
 @dataclass
 class EdgeTagRequest:
     type: PropertyType
     property: Property
     edge: str
-        
+
     def to_json(self):
         return json.dumps({
             "type": self.type.value,
             "property": self.property.to_dict(),
             "edge": self.edge,
         })
+
+
+@dataclass
+class EntityCreatedEvent:
+    id: str
+    type: AssetType
+    asset: Asset
