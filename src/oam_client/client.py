@@ -1,5 +1,8 @@
-from asset_model import Asset, Relation, Property
+import os
 import json
+import httpx
+import ssl
+from asset_model import Asset, Relation, Property
 from urllib import request
 from .messages import (
     ServerResponse,
@@ -12,49 +15,57 @@ from typing import Optional
 
 class EmitterClient:
     url: str
+    ssl_context: ssl.SSLContext
     
-    def __init__(self, url: str):
+    def __init__(self, url: str, keylog_filename: Optional[str] = None, verify: bool = True):
         self.url = url
+        
+        self.ssl_context = ssl.create_default_context()
+        self.ssl_context.keylog_filename = keylog_filename
+        if not verify:
+            self.ssl_context.check_hostname = False
+            self.ssl_context.verify_mode = ssl.CERT_NONE
 
-    def __send(self, method: str, path: str, payload: str) -> ServerResponse:
-        r = request.Request(
-            url=self.url + path,
-            method=method.upper(),
-            data=payload.encode("utf-8"),
-            headers={
-                "Content-Type": "application/json; charset=utf-8"
-            }
-        )
-        response = request.urlopen(r)
-        payload = response.read().decode(response.headers.get_content_charset())
-        payload_data = json.loads(payload)
-        return ServerResponse(
-            payload_data["subject"],
-            payload_data["action"]
-        )
-       
-    def createEntity(
+    async def __send(self, method: str, path: str, payload: str) -> ServerResponse:
+        async with httpx.AsyncClient(http2=True, verify=self.ssl_context) as client:
+            response = await client.request(
+                method=method.upper(),
+                url=self.url + path,
+                headers={
+                    "Content-Type": "application/json; charset=utf-8"
+                },
+                content=payload.encode("utf-8"),
+            )
+        
+            payload = response.json()
+
+            return ServerResponse(
+                payload["subject"],
+                payload["action"]
+            )
+    
+    async def createEntity(
             self,
             asset: Asset
     ) -> ServerResponse:
         entity = EntityRequest(asset.asset_type, asset)
-        return self.__send("post", "/emit/entity", entity.to_json())
+        return await self.__send("post", "/emit/entity", entity.to_json())
 
-    def updateEntity(
+    async def updateEntity(
             self,
             id: str,
             asset: Asset
     ) -> ServerResponse:
         entity = EntityRequest(asset.asset_type, asset)
-        return self.__send("put", f"/emit/entity/{id}", entity.to_json())
+        return await self.__send("put", f"/emit/entity/{id}", entity.to_json())
 
-    def deleteEntity(
+    async def deleteEntity(
             self,
             id: str
     ) -> ServerResponse:
-        return self.__send("delete", f"/emit/entity/{id}", "")
+        return await self.__send("delete", f"/emit/entity/{id}", "")
     
-    def createEdge(
+    async def createEdge(
             self,
             relation: Relation,
             from_entity: str,
@@ -63,9 +74,9 @@ class EmitterClient:
         edge = EdgeRequest(
             relation.relation_type, relation,
             from_entity, to_entity)
-        return self.__send("post", "/emit/edge", edge.to_json())
+        return await self.__send("post", "/emit/edge", edge.to_json())
 
-    def updateEdge(
+    async def updateEdge(
             self,
             id: str,
             relation: Relation,
@@ -75,24 +86,24 @@ class EmitterClient:
         edge = EdgeRequest(
             relation.relation_type, relation,
             from_entity, to_entity)
-        return self.__send("put", f"/emit/edge/{id}", edge.to_json())
+        return await self.__send("put", f"/emit/edge/{id}", edge.to_json())
 
-    def deleteEdge(
+    async def deleteEdge(
             self,
             id: str
     ) -> ServerResponse:
-        return self.__send("delete", f"/emit/edge/{id}", "")
+        return await self.__send("delete", f"/emit/edge/{id}", "")
     
-    def createEntityTag(
+    async def createEntityTag(
             self,
             property: Property,
             entity: str,
     ) -> ServerResponse:
         entity_tag = EntityTagRequest(
             property.property_type, property, entity)
-        return self.__send("post", "/emit/entity_tag", entity_tag.to_json())
+        return await self.__send("post", "/emit/entity_tag", entity_tag.to_json())
 
-    def updateEntityTag(
+    async def updateEntityTag(
             self,
             id: str,
             property: Property,
@@ -100,24 +111,24 @@ class EmitterClient:
     ) -> ServerResponse:
         entity_tag = EntityTagRequest(
             property.property_type, property, entity)
-        return self.__send("put", f"/emit/entity_tag/{id}", entity_tag.to_json())
+        return await self.__send("put", f"/emit/entity_tag/{id}", entity_tag.to_json())
 
-    def deleteEntityTag(
+    async def deleteEntityTag(
             self,
             id: str
     ) -> ServerResponse:
-        return self.__send("delete", f"/emit/entity_tag/{id}", "")
+        return await self.__send("delete", f"/emit/entity_tag/{id}", "")
     
-    def createEdgeTag(
+    async def createEdgeTag(
             self,
             property: Property,
             edge: str
     ) -> ServerResponse:        
         edge_tag = EdgeTagRequest(
             property.property_type, property, edge)
-        return self.__send("post", "/emit/edge_tag", edge_tag.to_json())
+        return await self.__send("post", "/emit/edge_tag", edge_tag.to_json())
 
-    def updateEdgeTag(
+    async def updateEdgeTag(
             self,
             id: str,
             property: Property,
@@ -125,10 +136,10 @@ class EmitterClient:
     ) -> ServerResponse:        
         edge_tag = EdgeTagRequest(
             property.property_type, property, edge)
-        return self.__send("put", f"/emit/edge_tag/{id}", edge_tag.to_json())
+        return await self.__send("put", f"/emit/edge_tag/{id}", edge_tag.to_json())
 
-    def deleteEdgeTag(
+    async def deleteEdgeTag(
             self,
             id: str
     ) -> ServerResponse:
-        return self.__send("delete", f"/emit/entity_tag/{id}", "")
+        return await self.__send("delete", f"/emit/entity_tag/{id}", "")
