@@ -3,11 +3,10 @@ import asyncio
 from httpx_sse import aconnect_sse, ServerSentEvent
 from asset_model import Asset, Relation, Property
 from .messages import (
-    ServerResponse,
-    EntityRequest,
-    EdgeRequest,
-    EdgeTagRequest,
-    EntityTagRequest,
+    Entity,
+    Edge,
+    EdgeTag,
+    EntityTag,
 )
 from typing import Callable
 from .base import BrokerClientBase
@@ -19,7 +18,7 @@ class AsyncBrokerClient(BrokerClientBase):
             method: str,
             path: str,
             payload: str
-    ) -> ServerResponse:
+    ) -> str:
         async with httpx.AsyncClient(
                 http2=True,
                 verify=self.ssl_context
@@ -33,12 +32,7 @@ class AsyncBrokerClient(BrokerClientBase):
                 content=payload.encode("utf-8"),
             )
 
-            payload = response.json()
-
-            return ServerResponse(
-                payload["subject"],
-                payload["action"]
-            )
+            return response.text
 
     async def __listen(
             self,
@@ -82,34 +76,38 @@ class AsyncBrokerClient(BrokerClientBase):
     async def create_entity(
             self,
             asset: Asset
-    ) -> ServerResponse:
-        entity = EntityRequest(asset.asset_type, asset)
-        return await self.__send("post", "/emit/entity", entity.to_json())
+    ) -> Entity:
+        entity = Entity(asset.asset_type, asset)
+        return Entity.from_json(
+            await self.__send("post", "/emit/entity", entity.to_json()))
 
     async def update_entity(
             self,
             id: str,
             asset: Asset
-    ) -> ServerResponse:
-        entity = EntityRequest(asset.asset_type, asset)
-        return await self.__send("put", f"/emit/entity/{id}", entity.to_json())
+    ) -> Entity:
+        entity = Entity(asset.asset_type, asset)
+        return Entity.from_json(
+            await self.__send("put", f"/emit/entity/{id}", entity.to_json()))
 
     async def delete_entity(
             self,
             id: str
-    ) -> ServerResponse:
-        return await self.__send("delete", f"/emit/entity/{id}", "")
+    ) -> Entity:
+        return Entity.from_json(
+            await self.__send("delete", f"/emit/entity/{id}", ""))
 
     async def create_edge(
             self,
             relation: Relation,
             from_entity: str,
             to_entity: str,
-    ) -> ServerResponse:
-        edge = EdgeRequest(
+    ) -> Edge:
+        edge = Edge(
             relation.relation_type, relation,
             from_entity, to_entity)
-        return await self.__send("post", "/emit/edge", edge.to_json())
+        return Edge.from_json(
+            await self.__send("post", "/emit/edge", edge.to_json()))
 
     async def update_edge(
             self,
@@ -117,67 +115,75 @@ class AsyncBrokerClient(BrokerClientBase):
             relation: Relation,
             from_entity: str,
             to_entity: str,
-    ) -> ServerResponse:
-        edge = EdgeRequest(
+    ) -> Edge:
+        edge = Edge(
             relation.relation_type, relation,
             from_entity, to_entity)
-        return await self.__send("put", f"/emit/edge/{id}", edge.to_json())
+        return Edge.from_json(
+            await self.__send("put", f"/emit/edge/{id}", edge.to_json()))
 
     async def delete_edge(
             self,
             id: str
-    ) -> ServerResponse:
-        return await self.__send("delete", f"/emit/edge/{id}", "")
+    ) -> Edge:
+        return Edge.from_json(
+            await self.__send("delete", f"/emit/edge/{id}", ""))
 
     async def create_entity_tag(
             self,
             property: Property,
             entity: str,
-    ) -> ServerResponse:
-        entity_tag = EntityTagRequest(
+    ) -> EntityTag:
+        entity_tag = EntityTag(
             property.property_type, property, entity)
-        return await self.__send(
-            "post", "/emit/entity_tag", entity_tag.to_json())
+        return EntityTag.from_json(
+            await self.__send(
+                "post", "/emit/entity_tag", entity_tag.to_json()))
 
     async def update_entity_tag(
             self,
             id: str,
             property: Property,
             entity: str,
-    ) -> ServerResponse:
-        entity_tag = EntityTagRequest(
+    ) -> EntityTag:
+        entity_tag = EntityTag(
             property.property_type, property, entity)
-        return await self.__send(
-            "put", f"/emit/entity_tag/{id}", entity_tag.to_json())
+        return EntityTag.from_json(
+            await self.__send(
+                "put", f"/emit/entity_tag/{id}", entity_tag.to_json()))
 
     async def delete_entity_tag(
             self,
             id: str
-    ) -> ServerResponse:
-        return await self.__send("delete", f"/emit/entity_tag/{id}", "")
+    ) -> EntityTag:
+        return EntityTag.from_json(
+            await self.__send("delete", f"/emit/entity_tag/{id}", ""))
 
     async def create_edge_tag(
             self,
             property: Property,
             edge: str
-    ) -> ServerResponse:
-        edge_tag = EdgeTagRequest(
+    ) -> EdgeTag:
+        edge_tag = EdgeTag(
             property.property_type, property, edge)
-        return await self.__send("post", "/emit/edge_tag", edge_tag.to_json())
+        return EdgeTag.from_json(
+            await self.__send("post", "/emit/edge_tag", edge_tag.to_json()))
 
     async def update_edge_tag(
             self,
             id: str,
             property: Property,
             edge: str
-    ) -> ServerResponse:
-        edge_tag = EdgeTagRequest(
+    ) -> EdgeTag:
+        edge_tag = EdgeTag(
             property.property_type, property, edge)
-        return await self.__send(
-            "put", f"/emit/edge_tag/{id}", edge_tag.to_json())
+        return EdgeTag.from_json(
+            await self.__send(
+                "put", f"/emit/edge_tag/{id}", edge_tag.to_json()))
 
     async def delete_edge_tag(
             self,
             id: str
-    ) -> ServerResponse:
-        return await self.__send("delete", f"/emit/entity_tag/{id}", "")
+    ) -> EdgeTag:
+        return EdgeTag.from_json(
+            await self.__send("delete", f"/emit/entity_tag/{id}", ""))
