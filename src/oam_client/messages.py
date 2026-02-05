@@ -13,7 +13,9 @@ from asset_model import (
     RelationType,
     Property,
     PropertyType,
-    get_asset_by_type
+    get_asset_by_type,
+    get_relation_by_type,
+    get_property_by_type
 )
 
 LOGLEVEL = os.getenv("LOGLEVEL", "WARNING").upper()
@@ -94,7 +96,7 @@ class Edge:
             last_seen=data["last_seen"],
             type=rel_type,
             relation=OAMObject.from_dict(
-                get_asset_by_type(rel_type), data["relation"]),
+                get_relation_by_type(rel_type), data["relation"]),
             from_entity=data["from_entity"],
             to_entity=data["to_entity"],
         )
@@ -130,7 +132,7 @@ class EntityTag:
             last_seen=data["last_seen"],
             type=prop_type,
             property=OAMObject.from_dict(
-                get_asset_by_type(prop_type), data["property"]),
+                get_property_by_type(prop_type), data["property"]),
             entity=data["entity"]
         )
 
@@ -165,7 +167,7 @@ class EdgeTag:
             last_seen=data["last_seen"],
             type=prop_type,
             property=OAMObject.from_dict(
-                get_asset_by_type(prop_type), data["property"]),
+                get_property_by_type(prop_type), data["property"]),
             edge=data["edge"]
         )
 
