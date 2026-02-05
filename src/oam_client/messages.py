@@ -11,7 +11,8 @@ from asset_model import (
     Relation,
     RelationType,
     Property,
-    PropertyType
+    PropertyType,
+    get_asset_by_type
 )
 
 
@@ -48,7 +49,7 @@ class Entity:
             last_seen=data["last_seen"],
             type=asset_type,
             asset=OAMObject.from_dict(
-                asset_model.__dict__[asset_type], data["asset"])
+                get_asset_by_type(asset_type), data["asset"])
         )
 
 
@@ -83,7 +84,7 @@ class Edge:
             last_seen=data["last_seen"],
             type=rel_type,
             relation=OAMObject.from_dict(
-                asset_model.__dict__[rel_type], data["relation"]),
+                get_asset_by_type(rel_type), data["relation"]),
             from_entity=data["from_entity"],
             to_entity=data["to_entity"],
         )
@@ -118,7 +119,7 @@ class EntityTag:
             last_seen=data["last_seen"],
             type=prop_type,
             property=OAMObject.from_dict(
-                asset_model.__dict__[prop_type], data["property"]),
+                get_asset_by_type(prop_type), data["property"]),
             entity=data["entity"]
         )
 
@@ -152,7 +153,7 @@ class EdgeTag:
             last_seen=data["last_seen"],
             type=prop_type,
             property=OAMObject.from_dict(
-                asset_model.__dict__[prop_type], data["property"]),
+                get_asset_by_type(prop_type), data["property"]),
             edge=data["edge"]
         )
 
