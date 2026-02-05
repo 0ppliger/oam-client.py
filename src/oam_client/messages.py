@@ -1,9 +1,10 @@
 import json
+import os
+import logging
 from datetime import datetime
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
-import asset_model
 from asset_model import (
     OAMObject,
     Asset,
@@ -14,6 +15,13 @@ from asset_model import (
     PropertyType,
     get_asset_by_type
 )
+
+LOGLEVEL = os.getenv("LOGLEVEL", "WARNING").upper()
+
+logging.basicConfig(
+    level=getattr(logging, LOGLEVEL, logging.WARNING))
+
+logger = logging.getLogger(__name__)
 
 
 class ServerAction(str, Enum):
@@ -41,6 +49,7 @@ class Entity:
 
     @staticmethod
     def from_json(json_data: str) -> "Entity":
+        logger.debug(json_data)
         data = json.loads(json_data)
         asset_type = AssetType(data["type"])
         return Entity(
@@ -76,6 +85,7 @@ class Edge:
 
     @staticmethod
     def from_json(json_data: str) -> "Edge":
+        logger.debug(json_data)
         data = json.loads(json_data)
         rel_type = RelationType(data["type"])
         return Edge(
@@ -111,6 +121,7 @@ class EntityTag:
 
     @staticmethod
     def from_json(json_data: str) -> "EntityTag":
+        logger.debug(json_data)
         data = json.loads(json_data)
         prop_type = PropertyType(data["type"])
         return EntityTag(
@@ -145,6 +156,7 @@ class EdgeTag:
 
     @staticmethod
     def from_json(json_data: str) -> "EdgeTag":
+        logger.debug(json_data)
         data = json.loads(json_data)
         prop_type = PropertyType(data["type"])
         return EdgeTag(
