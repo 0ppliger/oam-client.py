@@ -31,15 +31,19 @@ class ServerAction(str, Enum):
     EntityCreated    = "EntityCreated"
     EntityUpdated    = "EntityUpdated"
     EntityDeleted    = "EntityDeleted"
+    EntityTouched    = "EntityTouched"
     EdgeCreated      = "EdgeCreated"
     EdgeUpdated      = "EdgeUpdated"
     EdgeDeleted      = "EdgeDeleted"
+    EdgeTouched      = "EdgeTouched"
     EntityTagCreated = "EntityTagCreated"
     EntityTagUpdated = "EntityTagUpdated"
     EntityTagDeleted = "EntityTagDeleted"
+    EntityTagTouched = "EntityTagTouched"
     EdgeTagCreated   = "EdgeTagCreated"
     EdgeTagUpdated   = "EdgeTagUpdated"
     EdgeTagDeleted   = "EdgeTagDeleted"
+    EdgeTagTouched   = "EdgeTagTouched"
 
 
 @dataclass
@@ -198,18 +202,22 @@ class Event:
             match action:
                 case ServerAction.EntityCreated \
                    | ServerAction.EntityUpdated \
+                   | ServerAction.EntityTouched \
                    | ServerAction.EntityDeleted:
                     data = Entity.from_json(sse.data)
                 case ServerAction.EdgeCreated \
                    | ServerAction.EdgeUpdated \
+                   | ServerAction.EdgeTouched \
                    | ServerAction.EdgeDeleted:
                     data = Edge.from_json(sse.data)
                 case ServerAction.EntityTagCreated \
                    | ServerAction.EntityTagUpdated \
+                   | ServerAction.EntityTagTouched \
                    | ServerAction.EntityTagDeleted:
                     data = EntityTag.from_json(sse.data)
                 case ServerAction.EdgeTagCreated \
                    | ServerAction.EdgeTagUpdated \
+                   | ServerAction.EdgeTagTouched \
                    | ServerAction.EdgeTagDeleted:
                     data = EdgeTag.from_json(sse.data)
         except Exception as e:
