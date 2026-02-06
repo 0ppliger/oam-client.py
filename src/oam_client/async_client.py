@@ -1,15 +1,18 @@
 import httpx
 import asyncio
-from httpx_sse import aconnect_sse, ServerSentEvent
+from typing import Callable, Awaitable
+from httpx_sse import aconnect_sse
 from asset_model import Asset, Relation, Property
 from .messages import (
+    Event,
     Entity,
     Edge,
     EdgeTag,
     EntityTag,
 )
-from typing import Callable
 from .base import BrokerClientBase
+
+AsyncHandlerFunction = Callable[[Event], Awaitable[None]]
 
 
 class AsyncBrokerClient(BrokerClientBase):
@@ -38,8 +41,9 @@ class AsyncBrokerClient(BrokerClientBase):
             self,
             method: str,
             path: str,
-            callback: Callable[[ServerSentEvent], None]
+            handler: AsyncHandlerFunction
     ):
+        tasks = []
         while True:
             try:
                 async with httpx.AsyncClient(
@@ -53,7 +57,9 @@ class AsyncBrokerClient(BrokerClientBase):
                             url=self.url + path
                     ) as event_source:
                         async for sse in event_source.aiter_sse():
-                            callback(sse)
+                            tasks.append(
+                                asyncio.create_task(
+                                    handler(Event.from_sse(sse))))
 
             except (httpx.ReadTimeout,
                     httpx.ConnectError,
@@ -62,16 +68,16 @@ class AsyncBrokerClient(BrokerClientBase):
             except asyncio.CancelledError:
                 break
             except Exception as e:
+                await asyncio.gather(*tasks)
                 raise e
 
-    async def listen_events(self):
-        def print_event(sse: ServerSentEvent):
-            print(
-                sse.event,
-                sse.data,
-                sse.id,
-                sse.retry)
-        await self.__listen("GET", "/listen", print_event)
+        await asyncio.gather(*tasks)
+
+    async def listen_events(
+            self,
+            handler: AsyncHandlerFunction
+    ):
+        await self.__listen("GET", "/listen", handler)
 
     async def create_entity(
             self,

@@ -5,6 +5,7 @@ from datetime import datetime
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
+from httpx_sse import ServerSentEvent
 from asset_model import (
     OAMObject,
     Asset,
@@ -27,9 +28,54 @@ logger = logging.getLogger(__name__)
 
 
 class ServerAction(str, Enum):
-    Deleted = "deleted"
-    Upserted = "upserted"
-    Updated = "updated"
+    EntityCreated    = "EntityCreated"
+    EntityUpdated    = "EntityUpdated"
+    EntityDeleted    = "EntityDeleted"
+    EdgeCreated      = "EdgeCreated"
+    EdgeUpdated      = "EdgeUpdated"
+    EdgeDeleted      = "EdgeDeleted"
+    EntityTagCreated = "EntityTagCreated"
+    EntityTagUpdated = "EntityTagUpdated"
+    EntityTagDeleted = "EntityTagDeleted"
+    EdgeTagCreated   = "EdgeTagCreated"
+    EdgeTagUpdated   = "EdgeTagUpdated"
+    EdgeTagDeleted   = "EdgeTagDeleted"
+
+
+@dataclass
+class Event:
+    action: ServerAction
+    data: Entity | Edge | EntityTag | EdgeTag
+
+    @staticmethod
+    def from_sse(sse: ServerSentEvent) -> "Event":
+        try:
+            action = ServerAction(sse.event)
+        except ValueError as e:
+            raise e
+
+        try:
+            match action:
+                case ServerAction.EntityCreated \
+                   | ServerAction.EntityUpdated \
+                   | ServerAction.EntityDeleted:
+                    data = Entity.from_json(sse.data)
+                case ServerAction.EdgeCreated \
+                   | ServerAction.EdgeUpdated \
+                   | ServerAction.EdgeDeleted:
+                    data = Edge.from_json(sse.data)
+                case ServerAction.EntityTagCreated \
+                   | ServerAction.EntityTagUpdated \
+                   | ServerAction.EntityTagDeleted:
+                    data = EntityTag.from_json(sse.data)
+                case ServerAction.EdgeTagCreated \
+                   | ServerAction.EdgeTagUpdated \
+                   | ServerAction.EdgeTagDeleted:
+                    data = EdgeTag.from_json(sse.data)
+        except Exception as e:
+            raise e
+
+        return Event(action, data)
 
 
 @dataclass
@@ -170,10 +216,3 @@ class EdgeTag:
                 get_property_by_type(prop_type), data["property"]),
             edge=data["edge"]
         )
-
-
-@dataclass
-class EntityCreatedEvent:
-    id: str
-    type: AssetType
-    asset: Asset

@@ -1,14 +1,17 @@
 import httpx
-from httpx_sse import connect_sse, ServerSentEvent
+from httpx_sse import connect_sse
 from asset_model import Asset, Relation, Property
+from typing import Callable
 from .messages import (
+    Event,
     Entity,
     Edge,
     EdgeTag,
-    EntityTag,
+    EntityTag
 )
-from typing import Callable
 from .base import BrokerClientBase
+
+HandlerFunction = Callable[[Event], None]
 
 
 class BrokerClient(BrokerClientBase):
@@ -37,7 +40,7 @@ class BrokerClient(BrokerClientBase):
             self,
             method: str,
             path: str,
-            callback: Callable[[ServerSentEvent], None]
+            handler: HandlerFunction
     ):
         while True:
             try:
@@ -52,7 +55,7 @@ class BrokerClient(BrokerClientBase):
                             url=self.url + path
                     ) as event_source:
                         for sse in event_source.iter_sse():
-                            callback(sse)
+                            handler(Event.from_sse(sse))
 
             except (httpx.ReadTimeout,
                     httpx.ConnectError,
@@ -61,14 +64,11 @@ class BrokerClient(BrokerClientBase):
             except Exception as e:
                 raise e
 
-    def listen_events(self):
-        def print_event(sse: ServerSentEvent):
-            print(
-                sse.event,
-                sse.data,
-                sse.id,
-                sse.retry)
-        self.__listen("GET", "/listen", print_event)
+    def listen_events(
+            self,
+            handler: HandlerFunction
+    ):
+        self.__listen("GET", "/listen", handler)
 
     def create_entity(
             self,
