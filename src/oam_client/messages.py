@@ -43,42 +43,6 @@ class ServerAction(str, Enum):
 
 
 @dataclass
-class Event:
-    action: ServerAction
-    data: Entity | Edge | EntityTag | EdgeTag
-
-    @staticmethod
-    def from_sse(sse: ServerSentEvent) -> "Event":
-        try:
-            action = ServerAction(sse.event)
-        except ValueError as e:
-            raise e
-
-        try:
-            match action:
-                case ServerAction.EntityCreated \
-                   | ServerAction.EntityUpdated \
-                   | ServerAction.EntityDeleted:
-                    data = Entity.from_json(sse.data)
-                case ServerAction.EdgeCreated \
-                   | ServerAction.EdgeUpdated \
-                   | ServerAction.EdgeDeleted:
-                    data = Edge.from_json(sse.data)
-                case ServerAction.EntityTagCreated \
-                   | ServerAction.EntityTagUpdated \
-                   | ServerAction.EntityTagDeleted:
-                    data = EntityTag.from_json(sse.data)
-                case ServerAction.EdgeTagCreated \
-                   | ServerAction.EdgeTagUpdated \
-                   | ServerAction.EdgeTagDeleted:
-                    data = EdgeTag.from_json(sse.data)
-        except Exception as e:
-            raise e
-
-        return Event(action, data)
-
-
-@dataclass
 class Entity:
     type: AssetType
     asset: Asset
@@ -216,3 +180,39 @@ class EdgeTag:
                 get_property_by_type(prop_type), data["property"]),
             edge=data["edge"]
         )
+
+
+@dataclass
+class Event:
+    action: ServerAction
+    data: Entity | Edge | EntityTag | EdgeTag
+
+    @staticmethod
+    def from_sse(sse: ServerSentEvent) -> "Event":
+        try:
+            action = ServerAction(sse.event)
+        except ValueError as e:
+            raise e
+
+        try:
+            match action:
+                case ServerAction.EntityCreated \
+                   | ServerAction.EntityUpdated \
+                   | ServerAction.EntityDeleted:
+                    data = Entity.from_json(sse.data)
+                case ServerAction.EdgeCreated \
+                   | ServerAction.EdgeUpdated \
+                   | ServerAction.EdgeDeleted:
+                    data = Edge.from_json(sse.data)
+                case ServerAction.EntityTagCreated \
+                   | ServerAction.EntityTagUpdated \
+                   | ServerAction.EntityTagDeleted:
+                    data = EntityTag.from_json(sse.data)
+                case ServerAction.EdgeTagCreated \
+                   | ServerAction.EdgeTagUpdated \
+                   | ServerAction.EdgeTagDeleted:
+                    data = EdgeTag.from_json(sse.data)
+        except Exception as e:
+            raise e
+
+        return Event(action, data)
