@@ -10,8 +10,11 @@ from .messages import (
     EntityTag
 )
 from .base import BrokerClientBase
+from logging import getLogger
 
 HandlerFunction = Callable[[Event], None]
+
+logger = getLogger(__name__)
 
 
 class BrokerClient(BrokerClientBase):
@@ -34,6 +37,7 @@ class BrokerClient(BrokerClientBase):
                 content=payload.encode("utf-8"),
             )
 
+            logger.debug(f"__send:response:{response.text}")
             return response.text
 
     def __listen(

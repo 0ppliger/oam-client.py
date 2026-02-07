@@ -11,8 +11,11 @@ from .messages import (
     EntityTag,
 )
 from .base import BrokerClientBase
+from logging import getLogger
 
 AsyncHandlerFunction = Callable[[Event], Awaitable[None]]
+
+logger = getLogger(__name__)
 
 
 class AsyncBrokerClient(BrokerClientBase):
@@ -34,7 +37,7 @@ class AsyncBrokerClient(BrokerClientBase):
                 },
                 content=payload.encode("utf-8"),
             )
-
+            logger.debug(f"__send:response:{response.text}")
             return response.text
 
     async def __listen(
